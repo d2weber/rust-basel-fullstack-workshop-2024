@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
 pub struct ShoppingItem {
-    title: String,
-    creator: String,
+    pub title: String,
+    pub creator: String,
 }
+
+type UUID = String;
 
 pub struct InMemoryDatabase {
     inner: HashMap<String, ShoppingItem>,
@@ -19,6 +21,10 @@ impl InMemoryDatabase {
 
     fn delete_item(&mut self, uuid: &str) {
         self.inner.remove(uuid);
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&UUID, &ShoppingItem)> {
+        self.inner.iter()
     }
 }
 
@@ -36,7 +42,7 @@ impl Default for InMemoryDatabase {
                 (
                     "asdf2".to_owned(),
                     ShoppingItem {
-                        title: "Brocollo".to_owned(),
+                        title: "10x Brocollo".to_owned(),
                         creator: "Alice".to_owned(),
                     },
                 ),
