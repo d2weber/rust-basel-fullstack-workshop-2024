@@ -21,7 +21,9 @@ pub fn ShoppingList(change_signal: Signal<ListChanged>) -> Element {
                             key: "{i.uuid}",
                             ShoppingListItemComponent{
                                 display_name: i.title.clone(),
-                                posted_by: i.posted_by.clone()
+                                posted_by: i.posted_by.clone(),
+                                item_id: i.uuid.clone(),
+                                change_signal
                             },
                         }
                     }
@@ -46,7 +48,12 @@ pub fn ShoppingList(change_signal: Signal<ListChanged>) -> Element {
 }
 
 #[component]
-fn ShoppingListItemComponent(display_name: String, posted_by: String) -> Element {
+fn ShoppingListItemComponent(
+    display_name: String,
+    posted_by: String,
+    item_id: String,
+    change_signal: Signal<ListChanged>,
+) -> Element {
     rsx! {
         div {
             class: "flex items-center space-x-2",
@@ -57,6 +64,7 @@ fn ShoppingListItemComponent(display_name: String, posted_by: String) -> Element
             span {
                 "posted by {posted_by}"
             }
+            ItemDeleteButton {item_id, change_signal}
         }
     }
 }
@@ -66,7 +74,6 @@ pub fn ItemInput(change_signal: Signal<ListChanged>) -> Element {
     let mut item = use_signal(|| String::new());
     let mut author = use_signal(|| String::new());
 
-    // We implement this closure later
     let onsubmit = move |_| {
         spawn({
             async move {
@@ -115,6 +122,39 @@ pub fn ItemInput(change_signal: Signal<ListChanged>) -> Element {
                     class: "btn btn-primary w-full",
                     r#type: "submit",
                     "Commit"
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn ItemDeleteButton(item_id: String, change_signal: Signal<ListChanged>) -> Element {
+    let onclick = move |_| {
+        spawn({
+            let item_id = item_id.clone();
+            async move {
+                if let Ok(_) = delete_item(&item_id).await {
+                    change_signal.write();
+                }
+            }
+        });
+    };
+
+    rsx! {
+    button {
+        onclick: onclick,
+        class: "btn btn-circle",
+            svg {
+                class: "h-6 w-6",
+                view_box: "0 0 24 24",
+                stroke: "currentColor",
+                stroke_width: "2",
+                stroke_linecap: "round",
+                stroke_linejoin: "round",
+                fill: "none",
+                path {
+                    d: "M6 18L18 6M6 6l12 12"
                 }
             }
         }
