@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock};
 
 use crate::database::{InMemoryDatabase, ShoppingItem};
-use axum::extract::State;
+use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::{response::IntoResponse, Json};
 use model::{PostShopItem, ShoppingListItem};
@@ -39,4 +39,17 @@ pub async fn add_item(
         }),
     )
         .into_response()
+}
+
+pub async fn delete_item(
+    State(state): State<Database>,
+    Path(uuid): Path<Uuid>,
+) -> impl IntoResponse {
+    let Ok(mut db) = state.write() else {
+        return StatusCode::SERVICE_UNAVAILABLE;
+    };
+
+    db.delete_item(uuid.to_string());
+
+    StatusCode::OK
 }

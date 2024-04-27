@@ -39,8 +39,8 @@ impl InMemoryDatabase {
         self.inner.insert(uuid.as_ref().to_owned(), item);
     }
 
-    fn delete_item(&mut self, uuid: &str) {
-        self.inner.remove(uuid);
+    pub fn delete_item(&mut self, uuid: impl AsRef<str>) {
+        self.inner.remove(uuid.as_ref());
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (&Uuid, &ShoppingItem)> {
@@ -53,14 +53,14 @@ impl Default for InMemoryDatabase {
         Self {
             inner: [
                 (
-                    "asdf".to_owned(),
+                    "c0d35dad-d567-4025-a7c5-e31d793cd60c".to_owned(),
                     ShoppingItem {
                         title: "Pizza".to_owned(),
                         creator: "Douglas".to_string(),
                     },
                 ),
                 (
-                    "asdf2".to_owned(),
+                    "2781043b-ebde-4a45-84e1-c5e5a5a4e6e6".to_owned(),
                     ShoppingItem {
                         title: "10x Brocollo".to_owned(),
                         creator: "Alice".to_owned(),

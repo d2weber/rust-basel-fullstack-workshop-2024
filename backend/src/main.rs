@@ -3,8 +3,11 @@ mod database;
 
 use std::sync::{Arc, RwLock};
 
-use axum::{routing::get, Router};
-use controllers::{add_item, get_items};
+use axum::{
+    routing::{delete, get},
+    Router,
+};
+use controllers::{add_item, delete_item, get_items};
 use database::InMemoryDatabase;
 use tower_http::cors::CorsLayer;
 
@@ -16,6 +19,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/items", get(get_items).post(add_item))
+        .route("/items/:uuid", delete(delete_item))
         .layer(CorsLayer::permissive())
         .with_state(db);
 
