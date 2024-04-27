@@ -1,11 +1,22 @@
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub struct ShoppingItem {
     pub title: String,
     pub creator: String,
 }
 
-type UUID = String;
+impl ShoppingItem {
+    pub fn to_model(&self, uuid: impl AsRef<str>) -> model::ShoppingListItem {
+        model::ShoppingListItem {
+            title: self.title.clone(),
+            posted_by: self.creator.clone(),
+            uuid: uuid.as_ref().to_owned(),
+        }
+    }
+}
+
+type Uuid = String;
 
 pub struct InMemoryDatabase {
     inner: HashMap<String, ShoppingItem>,
@@ -23,7 +34,7 @@ impl InMemoryDatabase {
         self.inner.remove(uuid);
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&UUID, &ShoppingItem)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&Uuid, &ShoppingItem)> {
         self.inner.iter()
     }
 }

@@ -12,11 +12,7 @@ pub async fn get_items(State(state): State<Database>) -> impl IntoResponse {
         .read()
         .unwrap()
         .iter()
-        .map(|(uuid, item)| ShoppingListItem {
-            title: item.title.clone(),
-            posted_by: item.creator.clone(),
-            uuid: uuid.clone(),
-        })
+        .map(|(uuid, item)| item.to_model(uuid))
         .collect();
     Json(items)
 }
