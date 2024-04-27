@@ -1,12 +1,19 @@
+mod database;
+
+use std::sync::{Arc, RwLock};
+
 use axum::{
     extract::Path,
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
+use database::InMemoryDatabase;
 use model::ShoppingListItem;
 use serde::{Deserialize, Serialize};
 use tower_http::cors::CorsLayer;
+
+type Database = Arc<RwLock<InMemoryDatabase>>;
 
 async fn hello_world() -> impl IntoResponse {
     "Hello World"
@@ -18,12 +25,15 @@ async fn hello_name(Path(name): Path<String>) -> impl IntoResponse {
 
 #[tokio::main]
 async fn main() {
+    let db = Database::default();
+
     let app = Router::new()
         .route("/", get(hello_world))
         .route("/:name", get(hello_name))
         .route("/hihi", post(workshop_echo))
         .route("/items", get(get_items))
-        .layer(CorsLayer::permissive());
+        .layer(CorsLayer::permissive())
+        .with_state(db);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
     axum::serve(listener, app).await.unwrap();
