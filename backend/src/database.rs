@@ -16,6 +16,15 @@ impl ShoppingItem {
     }
 }
 
+impl From<model::PostShopItem> for ShoppingItem {
+    fn from(model::PostShopItem { title, posted_by }: model::PostShopItem) -> Self {
+        Self {
+            title,
+            creator: posted_by,
+        }
+    }
+}
+
 type Uuid = String;
 
 pub struct InMemoryDatabase {
@@ -26,8 +35,8 @@ impl InMemoryDatabase {
         self.inner.get(uuid)
     }
 
-    fn insert_item(&mut self, uuid: &str, item: ShoppingItem) {
-        self.inner.insert(uuid.to_string(), item);
+    pub fn insert_item(&mut self, uuid: impl AsRef<str>, item: ShoppingItem) {
+        self.inner.insert(uuid.as_ref().to_owned(), item);
     }
 
     fn delete_item(&mut self, uuid: &str) {

@@ -1,9 +1,11 @@
 use std::sync::{Arc, RwLock};
 
-use crate::database::InMemoryDatabase;
+use crate::database::{InMemoryDatabase, ShoppingItem};
 use axum::extract::State;
+use axum::http::StatusCode;
 use axum::{response::IntoResponse, Json};
-use model::ShoppingListItem;
+use model::{PostShopItem, ShoppingListItem};
+use uuid::Uuid;
 
 type Database = Arc<RwLock<InMemoryDatabase>>;
 
@@ -15,4 +17,26 @@ pub async fn get_items(State(state): State<Database>) -> impl IntoResponse {
         .map(|(uuid, item)| item.to_model(uuid))
         .collect();
     Json(items)
+}
+
+pub async fn add_item(
+    State(state): State<Database>,
+    Json(post_request): Json<PostShopItem>,
+) -> impl IntoResponse {
+    let Ok(mut db) = state.write() else {
+        return (StatusCode::SERVICE_UNAVAILABLE).into_response();
+    };
+
+    let uuid = Uuid::new_v4().to_string();
+    let item: ShoppingItem = post_request.into();
+    db.insert_item(&uuid, item.clone());
+    (
+        StatusCode::OK,
+        Json(ShoppingListItem {
+            title: item.title,
+            posted_by: item.creator,
+            uuid,
+        }),
+    )
+        .into_response()
 }
