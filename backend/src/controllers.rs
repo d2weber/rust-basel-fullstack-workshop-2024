@@ -4,7 +4,7 @@ use crate::database::{InMemoryDatabase, ShoppingItem};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::{response::IntoResponse, Json};
-use model::{PostShopItem, ShoppingListItem};
+use model::{CreateListResponse, PostShopItem, ShoppingListItem};
 use uuid::Uuid;
 
 type Database = Arc<RwLock<InMemoryDatabase>>;
@@ -56,4 +56,11 @@ pub async fn delete_item(
     db.delete_item(list_uuid.to_string(), item_uuid.to_string());
 
     StatusCode::OK
+}
+
+pub async fn create_shopping_list(State(state): State<Database>) -> impl IntoResponse {
+    let uuid = Uuid::new_v4().to_string();
+    state.write().unwrap().create_list(&uuid);
+
+    Json(CreateListResponse { uuid })
 }

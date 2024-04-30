@@ -5,10 +5,10 @@ use model::PostShopItem;
 pub struct ListChanged;
 
 #[component]
-pub fn ShoppingList(change_signal: Signal<ListChanged>) -> Element {
+pub fn ShoppingList(list_uuid: Signal<String>, change_signal: Signal<ListChanged>) -> Element {
     let items_request = use_resource(move || async move {
         change_signal.read();
-        get_items().await
+        get_items(&list_uuid.read()).await
     });
 
     match &*items_request.read_unchecked() {
@@ -22,6 +22,7 @@ pub fn ShoppingList(change_signal: Signal<ListChanged>) -> Element {
                             ShoppingListItemComponent{
                                 display_name: i.title.clone(),
                                 posted_by: i.posted_by.clone(),
+                                list_id: list_uuid,
                                 item_id: i.uuid.clone(),
                                 change_signal
                             },
@@ -51,6 +52,7 @@ pub fn ShoppingList(change_signal: Signal<ListChanged>) -> Element {
 fn ShoppingListItemComponent(
     display_name: String,
     posted_by: String,
+    list_id: String,
     item_id: String,
     change_signal: Signal<ListChanged>,
 ) -> Element {
@@ -64,13 +66,13 @@ fn ShoppingListItemComponent(
             span {
                 "posted by {posted_by}"
             }
-            ItemDeleteButton {item_id, change_signal}
+            ItemDeleteButton {list_id, item_id, change_signal}
         }
     }
 }
 
 #[component]
-pub fn ItemInput(change_signal: Signal<ListChanged>) -> Element {
+pub fn ItemInput(list_uuid: Signal<String>, change_signal: Signal<ListChanged>) -> Element {
     let mut item = use_signal(|| String::new());
     let mut author = use_signal(|| String::new());
 
@@ -79,10 +81,13 @@ pub fn ItemInput(change_signal: Signal<ListChanged>) -> Element {
             async move {
                 let item_name = item.read().to_string();
                 let author = author.read().to_string();
-                if let Ok(_) = post_item(PostShopItem {
-                    title: item_name,
-                    posted_by: author,
-                })
+                if let Ok(_) = post_item(
+                    &list_uuid.read(),
+                    PostShopItem {
+                        title: item_name,
+                        posted_by: author,
+                    },
+                )
                 .await
                 {
                     change_signal.write();
@@ -129,12 +134,17 @@ pub fn ItemInput(change_signal: Signal<ListChanged>) -> Element {
 }
 
 #[component]
-fn ItemDeleteButton(item_id: String, change_signal: Signal<ListChanged>) -> Element {
+fn ItemDeleteButton(
+    list_id: String,
+    item_id: String,
+    change_signal: Signal<ListChanged>,
+) -> Element {
     let onclick = move |_| {
         spawn({
+            let list_id = list_id.clone();
             let item_id = item_id.clone();
             async move {
-                if let Ok(_) = delete_item(&item_id).await {
+                if let Ok(_) = delete_item(&list_id, &item_id).await {
                     change_signal.write();
                 }
             }

@@ -60,10 +60,11 @@ pub fn Profile() -> Element {
 
 #[allow(non_snake_case)]
 pub fn Home() -> Element {
+    let list_uuid = use_signal(|| "9e137e61-08ac-469d-be9d-6b3324dd20ad".to_string());
     let change_signal = use_signal(|| ListChanged);
     rsx! {
-        ShoppingList{change_signal}
-        ItemInput{change_signal}
+        ShoppingList{list_uuid, change_signal}
+        ItemInput{list_uuid, change_signal}
     }
 }
 
